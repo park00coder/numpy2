@@ -1,0 +1,109 @@
+import numpy as np
+import csv
+import urllib.request
+
+# Download the dataset
+url = "https://drive.google.com/uc?id=1Cz0Yvx4yES8ydhLaBSnclIPxW2yKHwWH"
+filename = "elec.csv"
+urllib.request.urlretrieve(url, filename)
+
+# Read CSV data into a list
+data_list = []
+with open(filename, 'r') as file:
+    csv_reader = csv.reader(file)
+    for row in csv_reader:
+        data_list.append(row)
+
+# Convert the list to a NumPy array
+data_array = np.array(data_list)
+
+# Task 1: Explore array attributes
+print("Array Shape:", data_array.shape)
+print("Array Dimensions:", data_array.ndim)
+print("Data Type:", data_array.dtype)
+
+# Task 2: Print data from the first 10 rows of the 4th column
+print("Data in the 4th column (rows 0-9):", data_array[0:10, 3])
+
+# Task 3: Headers/titles row
+headers_row = data_array[0]
+print("Headers:", headers_row)
+
+# Task 4: Print data from columns 2 and 3, rows 1-20
+print("Data in columns 2 and 3 (rows 1-20):\n", data_array[1:21, 1:3])
+
+# Task 5: Print data from the first three and last three rows of all columns
+print("Data from the first and last three rows:\n", data_array[np.concatenate((np.arange(3), np.arange(-3, 0)))])
+
+# Task 6: Sort the data based on net amount of electricity generated
+sorted_indices = np.argsort(data_array[:, -1].astype(float))[::-1]
+sorted_data = data_array[sorted_indices]
+print("Sorted data based on net amount of electricity generated:\n", sorted_data)
+
+# Task 7: Calculate total electricity generated using coal and nuclear between 1949-1990
+mask = (data_array[:, 0] >= '194901') & (data_array[:, 0] <= '199012')
+coal_nuclear_data = data_array[mask]
+coal_generation = coal_nuclear_data[coal_nuclear_data[:, 2] == 'Coal'][:, -1].astype(float).sum()
+nuclear_generation = coal_nuclear_data[coal_nuclear_data[:, 2] == 'Nuclear'][:, -1].astype(float).sum()
+print("Total electricity generated using coal between 1949-1990:", coal_generation)
+print("Total electricity generated using nuclear between 1949-1990:", nuclear_generation)
+
+# Task 8: Print unique sources of energy generation
+unique_sources = np.unique(data_array[:, 2])
+print("Unique sources of energy generation:", unique_sources)
+
+# Task 9: Print details where the energy source is Wind Energy
+wind_mask = data_array[:, 2] == 'Wind Energy'
+wind_energy_data = data_array[wind_mask]
+print("Details where the energy source is Wind Energy:\n", wind_energy_data)
+
+# Task 10: Calculate total energy generated in the USA
+total_energy_generated = data_array[:, -1].astype(float).sum()
+print("Total energy generated in the USA:", total_energy_generated)
+
+# Task 11: Calculate average annual energy generated from wind and its standard deviation
+wind_energy_generation = data_array[data_array[:, 2] == 'Wind Energy', -1].astype(float)
+average_wind_energy = np.mean(wind_energy_generation)
+std_dev_wind_energy = np.std(wind_energy_generation)
+print("Average annual energy generated from wind:", average_wind_energy)
+print("Standard deviation in wind energy generation:", std_dev_wind_energy)
+
+# Task 12: Find maximum annual energy generated and its details
+max_energy_index = np.argmax(data_array[:, -1].astype(float))
+max_energy_details = data_array[max_energy_index]
+print("Maximum annual energy generated:", max_energy_details)
+
+# Task 13: Check if energy production in the USA has increased in the last 10 years
+last_10_years_mask = data_array[:, 0] >= '201301'
+last_10_years_energy = data_array[last_10_years_mask, -1].astype(float)
+has_increased = np.all(np.diff(last_10_years_energy) > 0)
+print("Has energy production increased in the last 10 years?", has_increased)
+
+# Task 14: Analyze trends in energy generation and identify the largest contributor
+years = data_array[:, 0].astype(int) // 100
+yearly_energy_sum = np.bincount(years, weights=data_array[:, -1].astype(float))
+largest_contributor_year = np.argmax(yearly_energy_sum)
+print("Year with the largest energy contribution:", largest_contributor_year)
+
+# Task 15: Predict renewable energy source with major demand in the coming years
+renewable_sources = ['Wind Energy', 'Solar Energy', 'Hydroelectric Conventional', 'Biomass', 'Geothermal']
+renewable_energy_sum = np.sum(data_array[np.isin(data_array[:, 2], renewable_sources), -1].astype(float))
+print("Total energy generated from renewable sources:", renewable_energy_sum)
+
+# Task 16: Compute contribution of wind, solar, and combined contribution compared to total energy generation
+wind_energy_sum = np.sum(data_array[data_array[:, 2] == 'Wind Energy', -1].astype(float))
+solar_energy_sum = np.sum(data_array[data_array[:, 2] == 'Solar Energy', -1].astype(float))
+total_energy_sum = np.sum(data_array[:, -1].astype(float))
+
+wind_contribution = wind_energy_sum / total_energy_sum
+solar_contribution = solar_energy_sum / total_energy_sum
+combined_renewable_contribution = (wind_energy_sum + solar_energy_sum) / total_energy_sum
+
+print("Contribution of Wind Energy:", wind_contribution)
+print("Contribution of Solar Energy:", solar_contribution)
+print("Combined contribution of Wind and Solar Energy:", combined_renewable_contribution)
+
+# Determine if the national grid is shifting toward wind energy
+is_shifting_toward_wind = wind_contribution > combined_renewable_contribution / 2
+print("Is the national grid shifting toward wind energy?", is_shifting_toward_wind)
+
